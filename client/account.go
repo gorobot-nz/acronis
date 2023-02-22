@@ -26,12 +26,12 @@ func (c *AcronisClient) checkLogin(login string) bool {
 	return true
 }
 
-func (c *AcronisClient) CreateUser(accountCreate *apimodels.Account) (*apimodels.Account, error) {
-	if isLogin := c.checkLogin(accountCreate.Login); !isLogin {
+func (c *AcronisClient) CreateUser(userCreate *apimodels.User) (*apimodels.User, error) {
+	if isLogin := c.checkLogin(userCreate.Login); !isLogin {
 		return nil, errors.New("login is taken")
 	}
 
-	reqBody, err := json.Marshal(accountCreate)
+	reqBody, err := json.Marshal(*userCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -51,21 +51,21 @@ func (c *AcronisClient) CreateUser(accountCreate *apimodels.Account) (*apimodels
 
 	defer resp.Body.Close()
 
-	var account apimodels.Account
+	var user apimodels.User
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.Unmarshal(body, &account)
+	err = json.Unmarshal(body, &user)
 	if err != nil {
 		return nil, err
 	}
 
-	return &account, nil
+	return &user, nil
 }
 
-func (c *AcronisClient) ActivateWithPassword(accountId, password string) error {
+func (c *AcronisClient) ActivateWithPassword(userId, password string) error {
 	var passwordBody = map[string]string{
 		"password": password,
 	}
@@ -75,7 +75,7 @@ func (c *AcronisClient) ActivateWithPassword(accountId, password string) error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf(userSetPasswordUrl, c.baseUrl, accountId), bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf(userSetPasswordUrl, c.baseUrl, userId), bytes.NewBuffer(reqBody))
 	if err != nil {
 		return err
 	}
@@ -88,13 +88,18 @@ func (c *AcronisClient) ActivateWithPassword(accountId, password string) error {
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.New("password was not set")
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return errors.New(string(body))
 	}
 	return nil
 }
 
-func (c *AcronisClient) ActivateWithMail(accountId string) error {
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf(userActivateUrl, c.clientId, accountId), nil)
+func (c *AcronisClient) ActivateWithMail(userId string) error {
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf(userActivateUrl, c.baseUrl, userId), nil)
 	if err != nil {
 		return err
 	}
@@ -106,7 +111,68 @@ func (c *AcronisClient) ActivateWithMail(accountId string) error {
 	}
 
 	if resp.StatusCode != http.StatusNoContent {
-		return errors.New("mail was not send")
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		return errors.New(string(body))
 	}
 	return nil
+}
+
+func (c *AcronisClient) FetchUser(userId string) (*apimodels.User, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(fetchUser, c.baseUrl, userId), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var user apimodels.User
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(body, &user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (c *AcronisClient) SearchUserByLogin(login string) string {
+	client, err := c.GetClient()
+	if err != nil {
+		return err.Error()
+	}
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(searchUrl, c.baseUrl, client.TenantId, login), nil)
+	if err != nil {
+		return err.Error()
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	res, err := c.Do(req)
+	if err != nil {
+		return err.Error()
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err.Error()
+	}
+	return string(body)
 }

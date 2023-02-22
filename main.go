@@ -26,12 +26,5 @@ func main() {
 		return
 	}
 
-	tenant, err := acronisClient.CreateTenant("testTenant")
-	if err != nil {
-		fmt.Print(err.Error())
-		return
-	}
-
-	fmt.Print(tenant)
-
+	_ = acronisClient.FetchTenants()
 }
