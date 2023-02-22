@@ -69,3 +69,52 @@ func (c *AcronisClient) FetchTenants() string {
 	}
 	return string(all)
 }
+
+func (c *AcronisClient) SwitchToProduction(tenantId string) string {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(tenantPricingUrl, c.baseUrl, tenantId), nil)
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return ""
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
+	resp.Body.Close()
+
+	var tenantPricing apimodels.TenantPricing
+	err = json.Unmarshal(body, &tenantPricing)
+	if err != nil {
+		return ""
+	}
+
+	tenantPricing.Mode = apimodels.TenantProductionMode
+	reqBody, err := json.Marshal(tenantPricing)
+	if err != nil {
+		return ""
+	}
+
+	req, err = http.NewRequest(http.MethodPut, fmt.Sprintf(tenantPricingUrl, c.baseUrl, tenantId), bytes.NewBuffer(reqBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err = c.Do(req)
+	if err != nil {
+		return ""
+	}
+
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
+	resp.Body.Close()
+
+	return string(body)
+}

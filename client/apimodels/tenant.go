@@ -7,6 +7,11 @@ const (
 	TenantUnitKind     = "unit"
 )
 
+const (
+	TenantTrialMode      = "trial"
+	TenantProductionMode = "production"
+)
+
 type TenantContacts struct {
 	Address1  string `json:"address1,omitempty"`
 	Address2  string `json:"address2,omitempty"`
@@ -18,6 +23,13 @@ type TenantContacts struct {
 	Phone     string `json:"phone,omitempty"`
 	State     string `json:"state,omitempty"`
 	ZipCode   string `json:"zipcode,omitempty"`
+}
+
+type TenantPricing struct {
+	Currency            string `json:"currency,omitempty"`
+	Mode                string `json:"mode,omitempty"`
+	ProductionStartDate string `json:"production_start_date,omitempty"`
+	Version             uint64 `json:"version,omitempty"`
 }
 
 type Tenant struct {

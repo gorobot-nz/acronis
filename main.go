@@ -26,5 +26,5 @@ func main() {
 		return
 	}
 
-	_ = acronisClient.FetchTenants()
+	acronisClient.SwitchToProduction("19f9321d-4bd6-420b-85b1-5cca6e940b98")
 }
