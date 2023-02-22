@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 
-	tenant, err := acronisClient.CreateCustomerTenant("testTenant")
+	tenant, err := acronisClient.CreateTenant("testTenant")
 	if err != nil {
 		fmt.Print(err.Error())
 		return
