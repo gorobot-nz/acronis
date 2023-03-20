@@ -3,13 +3,14 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/gorobot-nz/acronis/client/apimodels"
+	apimodels2 "github.com/gorobot-nz/acronis/pkg/client/apimodels"
 	"io"
 	"net/http"
 )
 
-func (c *AcronisClient) CreateTenant(tenantCreation *apimodels.Tenant) (*apimodels.Tenant, error) {
+func (c *AcronisClient) CreateTenant(tenantCreation *apimodels2.Tenant) (*apimodels2.Tenant, error) {
 	reqBody, err := json.Marshal(*tenantCreation)
 	if err != nil {
 		return nil, err
@@ -34,7 +35,7 @@ func (c *AcronisClient) CreateTenant(tenantCreation *apimodels.Tenant) (*apimode
 		return nil, err
 	}
 
-	var tenant apimodels.Tenant
+	var tenant apimodels2.Tenant
 	err = json.Unmarshal(body, &tenant)
 	if err != nil {
 		return nil, err
@@ -70,35 +71,35 @@ func (c *AcronisClient) FetchTenants() string {
 	return string(all)
 }
 
-func (c *AcronisClient) SwitchToProduction(tenantId string) string {
+func (c *AcronisClient) SwitchToProduction(tenantId string) error {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(tenantPricingUrl, c.baseUrl, tenantId), nil)
 	if err != nil {
-		return ""
+		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
 
 	resp, err := c.Do(req)
 	if err != nil {
-		return ""
+		return err
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return ""
+		return err
 	}
 	resp.Body.Close()
 
-	var tenantPricing apimodels.TenantPricing
+	var tenantPricing apimodels2.TenantPricing
 	err = json.Unmarshal(body, &tenantPricing)
 	if err != nil {
-		return ""
+		return err
 	}
 
-	tenantPricing.Mode = apimodels.TenantProductionMode
+	tenantPricing.Mode = apimodels2.TenantProductionMode
 	reqBody, err := json.Marshal(tenantPricing)
 	if err != nil {
-		return ""
+		return err
 	}
 
 	req, err = http.NewRequest(http.MethodPut, fmt.Sprintf(tenantPricingUrl, c.baseUrl, tenantId), bytes.NewBuffer(reqBody))
@@ -107,14 +108,61 @@ func (c *AcronisClient) SwitchToProduction(tenantId string) string {
 
 	resp, err = c.Do(req)
 	if err != nil {
-		return ""
+		return err
 	}
 
-	body, err = io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return errors.New(string(body))
+	}
+
+	return nil
+}
+
+func (c *AcronisClient) EnableItems(tenantId string, items []string) error {
+	client, err := c.GetClient()
 	if err != nil {
-		return ""
+		return err
 	}
-	resp.Body.Close()
 
-	return string(body)
+	offeringItems, err := c.GetOfferingItems(client.TenantId)
+	if err != nil {
+		return err
+	}
+
+	var itemsMap = map[string][]apimodels2.OfferingItem{
+		"offering_items": offeringItems,
+	}
+	reqBody, err := json.Marshal(itemsMap)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(enableOfferingItemsUrl, c.baseUrl, tenantId), bytes.NewBuffer(reqBody))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return errors.New(string(body))
+	}
+
+	return nil
 }

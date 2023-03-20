@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorobot-nz/acronis/client/apimodels"
+	"github.com/gorobot-nz/acronis/pkg/client/apimodels"
 	"io"
 	"net/http"
 )

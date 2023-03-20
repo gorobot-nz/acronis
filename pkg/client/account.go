@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorobot-nz/acronis/client/apimodels"
+	apimodels2 "github.com/gorobot-nz/acronis/pkg/client/apimodels"
 	"io"
 	"net/http"
 )
@@ -26,7 +26,7 @@ func (c *AcronisClient) checkLogin(login string) bool {
 	return true
 }
 
-func (c *AcronisClient) CreateUser(userCreate *apimodels.User) (*apimodels.User, error) {
+func (c *AcronisClient) CreateUser(userCreate *apimodels2.User) (*apimodels2.User, error) {
 	if isLogin := c.checkLogin(userCreate.Login); !isLogin {
 		return nil, errors.New("login is taken")
 	}
@@ -51,7 +51,7 @@ func (c *AcronisClient) CreateUser(userCreate *apimodels.User) (*apimodels.User,
 
 	defer resp.Body.Close()
 
-	var user apimodels.User
+	var user apimodels2.User
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func (c *AcronisClient) ActivateWithMail(userId string) error {
 	return nil
 }
 
-func (c *AcronisClient) FetchUser(userId string) (*apimodels.User, error) {
+func (c *AcronisClient) FetchUser(userId string) (*apimodels2.User, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(fetchUser, c.baseUrl, userId), nil)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (c *AcronisClient) FetchUser(userId string) (*apimodels.User, error) {
 
 	defer resp.Body.Close()
 
-	var user apimodels.User
+	var user apimodels2.User
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -149,6 +149,38 @@ func (c *AcronisClient) FetchUser(userId string) (*apimodels.User, error) {
 	}
 
 	return &user, nil
+}
+
+type offeringItemsResponse struct {
+	Items []apimodels2.OfferingItem `json:"items,omitempty"`
+}
+
+func (c *AcronisClient) GetOfferingItems(tenantId string) ([]apimodels2.OfferingItem, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(getOfferingItems, c.baseUrl, tenantId), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var respBody offeringItemsResponse
+	err = json.Unmarshal(body, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody.Items, nil
 }
 
 func (c *AcronisClient) SearchUserByLogin(login string) string {
