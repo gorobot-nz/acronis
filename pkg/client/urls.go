@@ -6,7 +6,7 @@ const (
 	clientIdUrl            = "%s/clients/%s"
 	tenantsUrl             = "%s/tenants"
 	enableOfferingItemsUrl = "%s/tenants/%s/offering_items"
-	getOfferingItems       = "%s/tenants/%s/offering_items/available_for_child"
+	getOfferingItems       = "%s/tenants/%s/offering_items/available_for_child?kind=customer"
 	childTenantsUrl        = "%s/tenants/%s/children?include_details=true"
 	tenantPricingUrl       = "%s/tenants/%s/pricing"
 	checkLoginUrl          = "%s/users/check_login?username=%s"

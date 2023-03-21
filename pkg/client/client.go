@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	apimodels2 "github.com/gorobot-nz/acronis/pkg/client/apimodels"
+	apimodels "github.com/gorobot-nz/acronis/pkg/client/apimodels"
 	"io"
 	"net/http"
 	"net/url"
@@ -45,7 +45,7 @@ func NewAcronisClient(clientId, clientSecret, datacenterUrl string) (*AcronisCli
 	if err != nil {
 		return nil, err
 	}
-	var authResponse = apimodels2.AuthResponse{}
+	var authResponse = apimodels.AuthResponse{}
 	err = json.Unmarshal(body, &authResponse)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func NewAcronisClient(clientId, clientSecret, datacenterUrl string) (*AcronisCli
 	}, nil
 }
 
-func (c *AcronisClient) GetClient() (*apimodels2.Client, error) {
+func (c *AcronisClient) GetClient() (*apimodels.Client, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(clientIdUrl, c.baseUrl, c.clientId), nil)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (c *AcronisClient) GetClient() (*apimodels2.Client, error) {
 		return nil, err
 	}
 
-	var client = apimodels2.Client{}
+	var client = apimodels.Client{}
 	err = json.Unmarshal(body, &client)
 	if err != nil {
 		return nil, err

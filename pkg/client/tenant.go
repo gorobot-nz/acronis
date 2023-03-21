@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	apimodels2 "github.com/gorobot-nz/acronis/pkg/client/apimodels"
+	"github.com/gorobot-nz/acronis/pkg/client/apimodels"
 	"io"
 	"net/http"
 )
 
-func (c *AcronisClient) CreateTenant(tenantCreation *apimodels2.Tenant) (*apimodels2.Tenant, error) {
+func (c *AcronisClient) CreateTenant(tenantCreation *apimodels.Tenant) (*apimodels.Tenant, error) {
 	reqBody, err := json.Marshal(*tenantCreation)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (c *AcronisClient) CreateTenant(tenantCreation *apimodels2.Tenant) (*apimod
 		return nil, err
 	}
 
-	var tenant apimodels2.Tenant
+	var tenant apimodels.Tenant
 	err = json.Unmarshal(body, &tenant)
 	if err != nil {
 		return nil, err
@@ -90,13 +90,13 @@ func (c *AcronisClient) SwitchToProduction(tenantId string) error {
 	}
 	resp.Body.Close()
 
-	var tenantPricing apimodels2.TenantPricing
+	var tenantPricing apimodels.TenantPricing
 	err = json.Unmarshal(body, &tenantPricing)
 	if err != nil {
 		return err
 	}
 
-	tenantPricing.Mode = apimodels2.TenantProductionMode
+	tenantPricing.Mode = apimodels.TenantProductionMode
 	reqBody, err := json.Marshal(tenantPricing)
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func (c *AcronisClient) EnableItems(tenantId string, items []string) error {
 		return err
 	}
 
-	var itemsMap = map[string][]apimodels2.OfferingItem{
+	var itemsMap = map[string][]apimodels.OfferingItem{
 		"offering_items": offeringItems,
 	}
 	reqBody, err := json.Marshal(itemsMap)

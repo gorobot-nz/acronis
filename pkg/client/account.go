@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	apimodels2 "github.com/gorobot-nz/acronis/pkg/client/apimodels"
+	apimodels "github.com/gorobot-nz/acronis/pkg/client/apimodels"
 	"io"
 	"net/http"
 )
@@ -26,7 +26,7 @@ func (c *AcronisClient) checkLogin(login string) bool {
 	return true
 }
 
-func (c *AcronisClient) CreateUser(userCreate *apimodels2.User) (*apimodels2.User, error) {
+func (c *AcronisClient) CreateUser(userCreate *apimodels.User) (*apimodels.User, error) {
 	if isLogin := c.checkLogin(userCreate.Login); !isLogin {
 		return nil, errors.New("login is taken")
 	}
@@ -51,7 +51,7 @@ func (c *AcronisClient) CreateUser(userCreate *apimodels2.User) (*apimodels2.Use
 
 	defer resp.Body.Close()
 
-	var user apimodels2.User
+	var user apimodels.User
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -63,6 +63,51 @@ func (c *AcronisClient) CreateUser(userCreate *apimodels2.User) (*apimodels2.Use
 	}
 
 	return &user, nil
+}
+
+type activateRoles struct {
+	Items []apimodels.Role `json:"items"`
+}
+
+func (c *AcronisClient) ActivateRoles(userId, tenantId string) string {
+	var roles = activateRoles{Items: []apimodels.Role{
+		apimodels.Role{
+			TenantId:    tenantId,
+			TrusteeId:   userId,
+			RoleId:      "backup_user",
+			Id:          "00000000-0000-0000-0000-000000000000",
+			IssuerId:    "00000000-0000-0000-0000-000000000000",
+			TrusteeType: "user",
+			Version:     0,
+		},
+	}}
+
+	marshal, err := json.Marshal(roles)
+	if err != nil {
+		return ""
+	}
+
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(usersUrl, c.baseUrl), bytes.NewBuffer(marshal))
+	if err != nil {
+		return ""
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return ""
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
+
+	return string(body)
 }
 
 func (c *AcronisClient) ActivateWithPassword(userId, password string) error {
@@ -122,7 +167,7 @@ func (c *AcronisClient) ActivateWithMail(userId string) error {
 	return nil
 }
 
-func (c *AcronisClient) FetchUser(userId string) (*apimodels2.User, error) {
+func (c *AcronisClient) FetchUser(userId string) (*apimodels.User, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(fetchUser, c.baseUrl, userId), nil)
 	if err != nil {
 		return nil, err
@@ -137,7 +182,7 @@ func (c *AcronisClient) FetchUser(userId string) (*apimodels2.User, error) {
 
 	defer resp.Body.Close()
 
-	var user apimodels2.User
+	var user apimodels.User
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -152,11 +197,11 @@ func (c *AcronisClient) FetchUser(userId string) (*apimodels2.User, error) {
 }
 
 type offeringItemsResponse struct {
-	Items []apimodels2.OfferingItem `json:"items,omitempty"`
+	Items []apimodels.OfferingItem `json:"items,omitempty"`
 }
 
-func (c *AcronisClient) GetOfferingItems(tenantId string) ([]apimodels2.OfferingItem, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(getOfferingItems, c.baseUrl, tenantId), nil)
+func (c *AcronisClient) GetOfferingItems(tenantId string) ([]apimodels.OfferingItem, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(enableOfferingItemsUrl, c.baseUrl, tenantId), nil)
 	if err != nil {
 		return nil, err
 	}
