@@ -27,7 +27,7 @@ func main() {
 		return
 	}
 
-	client, err := acronisClient.GetClient()
+	/*client, err := acronisClient.GetClient()
 	if err != nil {
 		return
 	}
@@ -54,8 +54,40 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 		return
+	}*/
+
+	services, err := acronisClient.FetchServices()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
 	}
 
-	acronisClient.ActivateRoles(user.Id, tenant.Id)
-	acronisClient.ActivateWithMail(user.Id)
+	var serviceId string
+
+	for _, val := range services {
+		if val.Type == apimodels.BackupType {
+			serviceId = val.Id
+			break
+		}
+	}
+
+	items, err := acronisClient.FetchOfferingItemsForChild(true)
+	if err != nil {
+		return
+	}
+
+	var filtered []apimodels.OfferingItem
+
+	for index := range items {
+		if items[index].ApplicationId == serviceId && items[index].Edition == apimodels.ProtectionPerGigabyte {
+			filtered = append(filtered, items[index])
+		}
+	}
+
+	for _, item := range filtered {
+		_ = acronisClient.EnableOfferingItem("5370059d-dee1-42d9-a509-a18843c83ee9", &item)
+		if err != nil {
+			return
+		}
+	}
 }

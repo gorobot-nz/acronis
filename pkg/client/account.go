@@ -69,7 +69,7 @@ type activateRoles struct {
 	Items []apimodels.Role `json:"items"`
 }
 
-func (c *AcronisClient) ActivateRoles(userId, tenantId string) string {
+func (c *AcronisClient) ActivateRoles(userId, tenantId string) error {
 	var roles = activateRoles{Items: []apimodels.Role{
 		apimodels.Role{
 			TenantId:    tenantId,
@@ -84,12 +84,12 @@ func (c *AcronisClient) ActivateRoles(userId, tenantId string) string {
 
 	marshal, err := json.Marshal(roles)
 	if err != nil {
-		return ""
+		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(usersUrl, c.baseUrl), bytes.NewBuffer(marshal))
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(activateUsersRole, c.baseUrl, userId), bytes.NewBuffer(marshal))
 	if err != nil {
-		return ""
+		return err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -97,17 +97,20 @@ func (c *AcronisClient) ActivateRoles(userId, tenantId string) string {
 
 	resp, err := c.Do(req)
 	if err != nil {
-		return ""
+		return err
 	}
 
-	defer resp.Body.Close()
+	if resp.StatusCode != 204 {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return ""
+		return errors.New(string(body))
 	}
 
-	return string(body)
+	return nil
 }
 
 func (c *AcronisClient) ActivateWithPassword(userId, password string) error {

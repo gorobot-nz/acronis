@@ -40,20 +40,7 @@ func (c *AcronisClient) FetchServices() ([]apimodels.Service, error) {
 	return fetch.Items, nil
 }
 
-func (c *AcronisClient) ActivateService(tenantId, serviceType string) error {
-	services, err := c.FetchServices()
-	if err != nil {
-		return err
-	}
-
-	var serviceId string
-	for _, val := range services {
-		if val.Type == serviceType {
-			serviceId = val.Id
-			break
-		}
-	}
-
+func (c *AcronisClient) ActivateService(tenantId, serviceId string) error {
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf(applicationActivateUrl, c.baseUrl, serviceId, tenantId), nil)
 	if err != nil {
 		return err
