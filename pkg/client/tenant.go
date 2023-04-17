@@ -123,26 +123,18 @@ func (c *AcronisClient) SwitchToProduction(tenantId string) error {
 	return nil
 }
 
-func (c *AcronisClient) EnableItems(tenantId string, items []string) error {
-	client, err := c.GetClient()
+func (c *AcronisClient) EditApplicationBillingMode(tenantId, applicationId string, mode apimodels.OfferingItemEdition) error {
+	var body = map[string]string{
+		"application_id": applicationId,
+		"target_edition": string(mode),
+	}
+
+	marshal, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
 
-	offeringItems, err := c.GetOfferingItems(client.TenantId)
-	if err != nil {
-		return err
-	}
-
-	var itemsMap = map[string][]apimodels.OfferingItem{
-		"offering_items": offeringItems,
-	}
-	reqBody, err := json.Marshal(itemsMap)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(enableOfferingItemsUrl, c.baseUrl, tenantId), bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(tenantEditApplication, c.baseUrl, tenantId), bytes.NewBuffer(marshal))
 	if err != nil {
 		return err
 	}
@@ -155,12 +147,13 @@ func (c *AcronisClient) EnableItems(tenantId string, items []string) error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != 200 {
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
+
 		return errors.New(string(body))
 	}
 

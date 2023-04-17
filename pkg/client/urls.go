@@ -5,6 +5,7 @@ const (
 	tokenUrl                            = "%s/idp/token"
 	clientIdUrl                         = "%s/clients/%s"
 	tenantsUrl                          = "%s/tenants"
+	tenantEditApplication               = "%s/tenants/%s/edition"
 	enableOfferingItemsUrl              = "%s/tenants/%s/offering_items"
 	getOfferingItemsForChild            = "%s/tenants/%s/offering_items/available_for_child?kind=customer"
 	getOfferingItemsForChildWithEdition = "%s/tenants/%s/offering_items/available_for_child?edition=*"
