@@ -237,7 +237,7 @@ func (c *AcronisClient) GetTokens(tenantId string) ([]apimodels.Token, error) {
 	return tokensResponce.Items, nil
 }
 
-func (c *AcronisClient) DeleteToken(tenantId, token string) error {
+func (c *AcronisClient) DeleteTokenByToken(tenantId, token string) error {
 	tokens, err := c.GetTokens(tenantId)
 	if err != nil {
 		return err
@@ -251,6 +251,33 @@ func (c *AcronisClient) DeleteToken(tenantId, token string) error {
 	}
 
 	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf(deleteToken, c.baseUrl, tokenId), nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 204 {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		return errors.New(string(body))
+	}
+
+	return nil
+}
+
+func (c *AcronisClient) DeleteTokenById(id int) error {
+	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf(deleteToken, c.baseUrl, id), nil)
 	if err != nil {
 		return err
 	}
