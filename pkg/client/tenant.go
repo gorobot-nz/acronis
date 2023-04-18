@@ -8,6 +8,7 @@ import (
 	"github.com/gorobot-nz/acronis/pkg/client/apimodels"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func (c *AcronisClient) CreateTenant(tenantCreation *apimodels.Tenant) (*apimodels.Tenant, error) {
@@ -200,4 +201,77 @@ func (c *AcronisClient) GenerateToken(tenantId string) (*apimodels.Token, error)
 	}
 
 	return &token, nil
+}
+
+type getTokensResponse struct {
+	Items []apimodels.Token `json:"items"`
+}
+
+func (c *AcronisClient) GetTokens(tenantId string) ([]apimodels.Token, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(generatedTokensUrl, c.baseUrl, tenantId), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	var tokensResponce getTokensResponse
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(respBody, &tokensResponce)
+	if err != nil {
+		return nil, err
+	}
+
+	return tokensResponce.Items, nil
+}
+
+func (c *AcronisClient) DeleteToken(tenantId, token string) error {
+	tokens, err := c.GetTokens(tenantId)
+	if err != nil {
+		return err
+	}
+
+	var tokenId int
+	for _, item := range tokens {
+		if strings.HasPrefix(token, item.Token) {
+			tokenId = item.Id
+		}
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf(deleteToken, c.baseUrl, tokenId), nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 204 {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		return errors.New(string(body))
+	}
+
+	return nil
 }
