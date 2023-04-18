@@ -159,3 +159,45 @@ func (c *AcronisClient) EditApplicationBillingMode(tenantId, applicationId strin
 
 	return nil
 }
+
+func (c *AcronisClient) GenerateToken(tenantId string) (*apimodels.Token, error) {
+	var body = map[string]interface{}{
+		"expires_in": 31536000,
+		"scopes": []string{
+			fmt.Sprintf("urn:acronis.com:tenant-id:%s:backup_agent_admin", tenantId),
+		},
+	}
+
+	marshal, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf(generatedTokensUrl, c.baseUrl, tenantId), bytes.NewBuffer(marshal))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	var token apimodels.Token
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(respBody, &token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &token, nil
+}
