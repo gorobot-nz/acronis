@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorobot-nz/acronis/pkg/client/apimodels"
 	"io"
@@ -76,10 +77,16 @@ func (c *AcronisClient) EnableOfferingItems(tenantId string, items []apimodels.O
 		return err
 	}
 
-	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
 
-	respBody, err := io.ReadAll(resp.Body)
-	fmt.Println(string(respBody))
+		return errors.New(string(body))
+	}
+
 	return nil
 }
 
@@ -106,9 +113,14 @@ func (c *AcronisClient) EnableOfferingItem(tenantId string, item *apimodels.Offe
 		return err
 	}
 
-	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
 
-	respBody, err := io.ReadAll(resp.Body)
-	fmt.Println(string(respBody))
+		return errors.New(string(body))
+	}
 	return nil
 }
