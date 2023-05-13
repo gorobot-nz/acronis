@@ -100,7 +100,7 @@ func (c *AcronisClient) ActivateRoles(userId, tenantId string) error {
 		return err
 	}
 
-	if resp.StatusCode != 204 {
+	if resp.StatusCode != 200 {
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
