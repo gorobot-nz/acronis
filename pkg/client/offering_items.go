@@ -64,7 +64,7 @@ func (c *AcronisClient) EnableOfferingItems(tenantId string, items []apimodels.O
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(enableOfferingItemsUrl, c.baseUrl, tenantId), bytes.NewBuffer(marshal))
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(offeringItemsUrl, c.baseUrl, tenantId), bytes.NewBuffer(marshal))
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (c *AcronisClient) EnableOfferingItem(tenantId string, item *apimodels.Offe
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(enableOfferingItemsUrl, c.baseUrl, tenantId), bytes.NewBuffer(marshal))
+	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf(offeringItemsUrl, c.baseUrl, tenantId), bytes.NewBuffer(marshal))
 	if err != nil {
 		return err
 	}

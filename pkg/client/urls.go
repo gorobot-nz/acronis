@@ -8,7 +8,7 @@ const (
 	tenantEditApplication               = "%s/tenants/%s/edition"
 	generatedTokensUrl                  = "%s/tenants/%s/registration_tokens"
 	deleteToken                         = "%s/registration_tokens/%d"
-	enableOfferingItemsUrl              = "%s/tenants/%s/offering_items"
+	offeringItemsUrl                    = "%s/tenants/%s/offering_items"
 	getOfferingItemsForChild            = "%s/tenants/%s/offering_items/available_for_child?kind=customer"
 	getOfferingItemsForChildWithEdition = "%s/tenants/%s/offering_items/available_for_child?edition=*"
 	childTenantsUrl                     = "%s/tenants/%s/children?include_details=true"

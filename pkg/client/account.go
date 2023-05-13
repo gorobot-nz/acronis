@@ -204,7 +204,7 @@ type offeringItemsResponse struct {
 }
 
 func (c *AcronisClient) GetOfferingItems(tenantId string) ([]apimodels.OfferingItem, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(enableOfferingItemsUrl, c.baseUrl, tenantId), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(offeringItemsUrl, c.baseUrl, tenantId), nil)
 	if err != nil {
 		return nil, err
 	}
