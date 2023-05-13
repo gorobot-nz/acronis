@@ -9,6 +9,8 @@ const (
 	generatedTokensUrl                  = "%s/tenants/%s/registration_tokens"
 	deleteToken                         = "%s/registration_tokens/%d"
 	offeringItemsUrl                    = "%s/tenants/%s/offering_items"
+	externalTokenUrl                    = "%s/idp/ott"
+	redirectUrl                         = "%s/idp/external-login#ott=%s&targetURI=%s"
 	getOfferingItemsForChild            = "%s/tenants/%s/offering_items/available_for_child?kind=customer"
 	getOfferingItemsForChildWithEdition = "%s/tenants/%s/offering_items/available_for_child?edition=*"
 	childTenantsUrl                     = "%s/tenants/%s/children?include_details=true"
